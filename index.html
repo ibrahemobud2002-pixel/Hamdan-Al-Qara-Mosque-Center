@@ -1867,53 +1867,23 @@ function showMushafView() {
             'p.addEventListener("pause",function(){if(!ap())tk();});' +
             'p.addEventListener("ended",function(){if(!ap())tk();});' +
         '});' +
-        'document.addEventListener("visibilitychange",function(){' +
-            'if(ap()){' +
-                'sk();' +
-                'if("wakeLock"in navigator){navigator.wakeLock.request("screen").catch(function(){});}' +
-            '}' +
-        '});' +
-        'if("mediaSession"in navigator){try{' +
-            'navigator.mediaSession.setActionHandler("play",function(){' +
-                'if(typeof playbackState!=="undefined"&&playbackState.active){' +
-                    'var r=document.getElementById("range-audio-player");if(r)r.play().catch(function(){});' +
-                '}' +
-            '});' +
-            'navigator.mediaSession.setActionHandler("pause",function(){if(typeof stopRecitation==="function")stopRecitation();});' +
-            'navigator.mediaSession.setActionHandler("stop",function(){if(typeof stopRecitation==="function")stopRecitation();tk();});' +
-            'navigator.mediaSession.setActionHandler("nexttrack",function(){if(typeof stepAyah==="function")stepAyah(1);});' +
-            'navigator.mediaSession.setActionHandler("previoustrack",function(){if(typeof stepAyah==="function")stepAyah(-1);});' +
-        '}catch(e){}}' +
-        'document.addEventListener("touchstart",function once(){sk();document.removeEventListener("touchstart",once);},{once:true});' +
-        'document.addEventListener("click",function once(){sk();document.removeEventListener("click",once);},{once:true});' +
+        'document.addEventListener("visibilitychange",function(){if(ap()){sk();}});' +
     '})();' +
     '</scr' + 'ipt>';
 
     html = html.replace('</body>', keepAliveScript + '</body>');
 
-    // عرض المصحف داخل الموقع نفسه بدل الانتقال إلى blob URL؛
-    // هذا يمنع مشكلة عدم فتح المصحف على بعض متصفحات الهاتف.
-    let overlay = document.getElementById('mushafOverlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'mushafOverlay';
-        overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column;';
-        overlay.innerHTML = `
-            <div style="height:52px;min-height:52px;background:#fff;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:flex-start;padding:0 10px;direction:rtl;box-shadow:0 2px 8px rgba(0,0,0,.12);">
-                <button type="button" id="mushafCloseBtn" style="border:0;background:#A57455;color:#fff;border-radius:12px;padding:8px 16px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;">رجوع</button>
-            </div>
-            <iframe id="mushafFrame" title="المصحف" style="border:0;flex:1;width:100%;height:calc(100% - 52px);background:#fff;"></iframe>
-        `;
-        document.body.appendChild(overlay);
-        document.getElementById('mushafCloseBtn').onclick = function () {
-            overlay.remove();
-            document.body.style.overflow = '';
-        };
+    // افتح المصحف في تبويب/صفحة مستقلة كما كان، وليس داخل نافذة فوق الموقع.
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const mushafWindow = window.open(url, '_blank');
+
+    if (!mushafWindow) {
+        // إذا منع المتصفح فتح تبويب جديد، افتحه في نفس الصفحة كحل احتياطي.
+        window.location.href = url;
+    } else {
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
     }
-    const frame = document.getElementById('mushafFrame');
-    frame.srcdoc = html;
-    overlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
 }
         const APP_VIEW_IDS = ['homeView', 'circlesView', 'adminRecordsView', 'generalInstructionsView', 'newStudentRegistrationView', 'daawahProgramsView', 'daawahProgramDetailView', 'aboutMenuView', 'aboutDocView'];
         function showAppView(viewId) {
